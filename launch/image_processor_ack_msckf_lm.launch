@@ -1,0 +1,39 @@
+<launch>
+
+  <arg name="ack_msckf_lam_robot" default="ack_msckf_lam"/>
+
+  <arg name="ack_msckf_lam_calibration_file"
+    default="$(find ack_msckf_lam)/config/msckf-mynt_imu_a27_is_svd.yaml"/>
+  
+  <arg name="output_path"   default="$(find ack_msckf_lam)/_output_/"/>
+
+  <!-- Image Processor Nodelet  -->
+  <group ns="$(arg ack_msckf_lam_robot)">
+    <node pkg="nodelet" type="nodelet" name="image_processor_ack_lam"
+      args="standalone ack_msckf_lam/ImageProcessorAckLamNodelet"
+      output="screen">
+      
+      <rosparam command="load" file="$(arg ack_msckf_lam_calibration_file)"/>
+
+      <param name="grid_row" value="4"/>
+      <param name="grid_col" value="5"/>
+      <param name="grid_min_feature_num" value="3"/>
+      <param name="grid_max_feature_num" value="4"/>
+      <param name="pyramid_levels" value="3"/>
+      <param name="patch_size" value="15"/>
+      <param name="fast_threshold" value="10"/>
+      <param name="max_iteration" value="30"/>
+      <param name="track_precision" value="0.01"/>
+      <param name="ransac_threshold" value="3"/>
+      <param name="ack_threshold" value="10"/>
+
+      <remap from="~imu" to="/mynteye/imu/data_raw"/>
+      <remap from="~cam0_image" to="/mynteye/left/image_raw"/>
+      
+      <!--debug-->
+      <param name="output_path"   value="$(arg output_path)"/>
+      
+    </node>
+  </group>
+
+</launch>
