@@ -1,8 +1,8 @@
 
 
-# ACK-MSCKF-LM
+# MAVIO
 
-ACK-MSCKF-LM is a consistent monocular Ackermann visual-inertial odometry (VIO) for intelligent and connected vehicle localization based on the famous open source VIO, i.e., S-MSCKF [1].  It figures out  the inconsistency problem of ACK-MSCKF to further improve the vehicle positioning accuracy using just a monocular configuration.
+MAVIO (ACK-MSCKF-LM) is a consistent monocular Ackermann visual-inertial odometry (VIO) for intelligent and connected vehicle localization based on the famous open source VIO, i.e., S-MSCKF [1].  It figures out  the inconsistency problem of ACK-MSCKF to further improve the vehicle positioning accuracy using just a monocular configuration.
 
 1. Sun, K.; Mohta, K.; Pfrommer, B.; Watterson, M.; Liu, S.; Mulgaonkar, Y.; Taylor, C.J.; Kumar, V. Robust stereo visual inertial odometry for fast autonomous flight. IEEE Robot. Autom. Lett. 2018, 3, 965–972, doi:10.1109/LRA.2018.2793349.
 
