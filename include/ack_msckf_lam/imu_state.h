@@ -307,7 +307,51 @@ struct ACKState {
 };
 
 
+/*
+ * @brief GNSSState State
+ * raw_gnss fusion
+ */
+struct GNSSState {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  // An unique identifier for the GNSSS state.
+  StateIDType id;
+
+  // id for next GNSSS state
+  static StateIDType next_id;
+
+  // Time when the state is recorded
+  double time;
+
+  // Orientation
+  // Take a vector from the world frame to
+  // the GNSSS frame.
+  Eigen::Vector4d orientation;
+
+  // Position of the GNSSS frame
+  // in the world frame.
+  Eigen::Vector3d position;
+
+  double heading;
+
+  // ICP 
+  // JPL
+  Eigen::Matrix3d R_GB_US;
+  Eigen::Vector3d t_GB_US;
+
+  GNSSState(): id(0), time(0), heading(0),
+    R_GB_US(Eigen::MatrixXd::Identity(3,3)),
+    t_GB_US(Eigen::Vector3d::Zero()),
+    orientation(Eigen::Vector4d(0, 0, 0, 1)),
+    position(Eigen::Vector3d::Zero()){}
+
+  GNSSState(const StateIDType& new_id): id(new_id), time(0), heading(0),
+    R_GB_US(Eigen::MatrixXd::Identity(3,3)),
+    t_GB_US(Eigen::Vector3d::Zero()),
+    orientation(Eigen::Vector4d(0, 0, 0, 1)),
+    position(Eigen::Vector3d::Zero()){}
+
+};
 
 } // namespace ack_msckf_lam
 

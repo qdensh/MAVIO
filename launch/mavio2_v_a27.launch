@@ -1,5 +1,8 @@
 <launch>
 
+  <!--raw GNSS-->
+  <arg name="ack_msckf_lam_use_raw_gnss" default="false"/>
+
   <!--tunable parameter configurations-->
   <arg name="ackermann_update_v" default="true"/>
   <arg name="ackermann_update_q" default="false"/>
@@ -94,6 +97,7 @@
       <remap from="~imu" to="/mynteye/imu/data_raw"/>
       <remap from="~features" to="image_processor_ack_lam/features"/>
       <remap from="~ackermann" to="/vehicle_msgs_canpal/AckermannDriveStamped"/>
+      <remap from="~raw_gnss" to="/gps_rtk_msgs/fix_raw"/>
       <remap from="~gt" to="/gps_rtk_msgs/gt_odom_G"/>
 
       <!--discrete-time-->
@@ -116,6 +120,7 @@
       <param name="use_ackermann" value="$(arg ack_msckf_lam_use_ackermann)"/>
       <param name="ackermann_update_v" value="$(arg ackermann_update_v)"/>
       <param name="ackermann_update_q" value="$(arg ackermann_update_q)"/>
+      <param name="use_raw_gnss" value="$(arg ack_msckf_lam_use_raw_gnss)"/>
 
     </node>
   </group>

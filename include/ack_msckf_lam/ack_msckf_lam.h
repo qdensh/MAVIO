@@ -40,6 +40,8 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 
+#include <sensor_msgs/NavSatFix.h>
+
 namespace ack_msckf_lam {
 /*
  * @brief AckMsckfLam Implements the algorithm in
@@ -82,6 +84,10 @@ class AckMsckfLam {
      *    model.
      */
     struct StateServer {
+        
+      // raw_gnss fusion
+      GNSSState gnss_state;
+
       ACKState ack_state;
 
       IMUState imu_state;
@@ -91,9 +97,10 @@ class AckMsckfLam {
       Eigen::MatrixXd state_cov;
       Eigen::Matrix<double, 12, 12> continuous_noise_cov;
 
-      // ack
+      // ack State covariance matrix
       Eigen::MatrixXd state_cov_ack;
       Eigen::Matrix<double, 6, 6> continuous_noise_cov_ack;
+
     };
 
 
@@ -379,7 +386,7 @@ class AckMsckfLam {
     std::vector<struct CSVDATA_RMSE> csvData_rmse;
 
     std::ofstream time_file;
-    // RMSE
+    // TIME
     struct CSVDATA_TIME {
         double time;
         double Dtime;
@@ -389,6 +396,20 @@ class AckMsckfLam {
     std::vector<struct CSVDATA_TIME> csvData_time;
     double total_time = 0;
     bool is_csv_curr_time_init = false;
+
+    // raw_gnss fusion
+    ros::Subscriber gnss_sub;
+    bool is_gnss_aligned = false;
+    void rawGnssCallback(const sensor_msgs::NavSatFix & msg);
+    bool use_raw_gnss = false;
+    void gnssUpdate(const CameraMeasurementConstPtr& msg);
+    Eigen::Vector3d t_s_i;
+    void measurementUpdate_gnss(
+        const Eigen::MatrixXd& H, const Eigen::VectorXd& r,const Eigen::MatrixXd &noise);
+    std::deque<std::pair<double,sensor_msgs::NavSatFix>> gnss_msg_buffer;
+    std::deque<std::pair<double,Eigen::Vector3d>> vio_position_buffer;
+    void rawGnssAlign();
+    double last_check_gnss_time = 0;
 
 };
 

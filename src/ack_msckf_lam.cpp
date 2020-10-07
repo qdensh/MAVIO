@@ -26,6 +26,8 @@
 #include <ack_msckf_lam/ack_msckf_lam.h>
 #include <ack_msckf_lam/math_utils.hpp>
 #include <ack_msckf_lam/utils.h>
+#include <ack_msckf_lam/navsat_conversions.h>
+#include <ack_msckf_lam/registration.hpp>
 
 #include <sophus/se3.hpp>
 
@@ -288,6 +290,9 @@ void AckMsckfLam::processModel_ack(const double& time,
  */
 bool AckMsckfLam::loadParameters() {
 
+  // raw_gnss fusion
+  nh.param<bool>("use_raw_gnss", use_raw_gnss, false);
+
   nh.param<bool>("use_ackermann", use_ackermann, true);
   nh.param<bool>("use_a27_platform", use_a27_platform, true);
   nh.param<bool>("use_svd_ex", use_svd_ex, true);
@@ -344,36 +349,71 @@ bool AckMsckfLam::loadParameters() {
 		     file_time = tmp;
 			 }();
 
-  // ack_msckf_lm
-  // pose
-  pose_file.open((output_path + "pose_ack_msckf_lm_lever" + "_" + file_time + ".txt"), std::ios::out);
-  if(!pose_file.is_open())
-  {
-      cerr << "pose_ack_msckf_lm_lever is not open" << endl;
-  }
-  // odom
-  odom_file.open((output_path + "odom_ack_msckf_lm_lever" + "_" + file_time + ".csv"), std::ios::out);
-  if(!odom_file.is_open())
-  {
-      cerr << "odom_ack_msckf_lm_lever is not open" << endl;
-  }
-  // std
-  std_file.open((output_path + "std_ack_msckf_lm_lever" + "_" + file_time + ".csv"), std::ios::out);
-  if(!std_file.is_open())
-  {
-      cerr << "std_ack_msckf_lm_lever is not open" << endl;
-  }
-  // rmse
-  rmse_file.open((output_path + "rmse_ack_msckf_lm_lever" + "_" + file_time + ".csv"), std::ios::out);
-  if(!rmse_file.is_open())
-  {
-      cerr << "rmse_ack_msckf_lm_lever  is not open" << endl;
-  }
-  // time
-  time_file.open((output_path + "time_ack_msckf_lm_lever" + "_" + file_time + ".csv"), std::ios::out);
-  if(!time_file .is_open())
-  {
-      cerr << "time_ack_msckf_lm_lever  is not open" << endl;
+  if(use_raw_gnss){
+
+    // pose
+    pose_file.open((output_path + "pose_ack_msckf_lm_lever_gnss" + "_" + file_time + ".txt"), std::ios::out);
+    if(!pose_file.is_open())
+    {
+        cerr << "pose_ack_msckf_lm_lever_gnss is not open" << endl;
+    }
+    // odom
+    odom_file.open((output_path + "odom_ack_msckf_lm_lever_gnss" + "_" + file_time + ".csv"), std::ios::out);
+    if(!odom_file.is_open())
+    {
+        cerr << "odom_ack_msckf_lm_lever_gnss is not open" << endl;
+    }
+    // std
+    std_file.open((output_path + "std_ack_msckf_lm_lever_gnss" + "_" + file_time + ".csv"), std::ios::out);
+    if(!std_file.is_open())
+    {
+        cerr << "std_ack_msckf_lm_lever_gnss is not open" << endl;
+    }
+    // rmse
+    rmse_file.open((output_path + "rmse_ack_msckf_lm_lever_gnss" + "_" + file_time + ".csv"), std::ios::out);
+    if(!rmse_file.is_open())
+    {
+        cerr << "rmse_ack_msckf_lm_lever_gnss is not open" << endl;
+    }
+    // time
+    time_file.open((output_path + "time_ack_msckf_lm_lever_gnss" + "_" + file_time + ".csv"), std::ios::out);
+    if(!time_file .is_open())
+    {
+        cerr << "time_ack_msckf_lm_lever_gnss is not open" << endl;
+    }
+
+  }else{
+  
+    // pose
+    pose_file.open((output_path + "pose_ack_msckf_lm_lever" + "_" + file_time + ".txt"), std::ios::out);
+    if(!pose_file.is_open())
+    {
+        cerr << "pose_ack_msckf_lm_lever is not open" << endl;
+    }
+    // odom
+    odom_file.open((output_path + "odom_ack_msckf_lm_lever" + "_" + file_time + ".csv"), std::ios::out);
+    if(!odom_file.is_open())
+    {
+        cerr << "odom_ack_msckf_lm_lever is not open" << endl;
+    }
+    // std
+    std_file.open((output_path + "std_ack_msckf_lm_lever" + "_" + file_time + ".csv"), std::ios::out);
+    if(!std_file.is_open())
+    {
+        cerr << "std_ack_msckf_lm_lever is not open" << endl;
+    }
+    // rmse
+    rmse_file.open((output_path + "rmse_ack_msckf_lm_lever" + "_" + file_time + ".csv"), std::ios::out);
+    if(!rmse_file.is_open())
+    {
+        cerr << "rmse_ack_msckf_lm_lever is not open" << endl;
+    }
+    // time
+    time_file.open((output_path + "time_ack_msckf_lm_lever" + "_" + file_time + ".csv"), std::ios::out);
+    if(!time_file .is_open())
+    {
+        cerr << "time_ack_msckf_lm_lever is not open" << endl;
+    }
   }
 
   std::string delim = ",";
@@ -539,6 +579,7 @@ bool AckMsckfLam::loadParameters() {
 
   // platform
   if(use_a27_platform){
+    // a27_platform 
     if(use_svd_ex){
           // is_svd
           // Hamilton -> JPL
@@ -649,11 +690,28 @@ bool AckMsckfLam::createRosIO() {
   // ackermann
   ack_sub = nh.subscribe("ackermann", 200,
       &AckMsckfLam::ackCallback, this);
+  
+  // raw_gnss fusion
+  gnss_sub = nh.subscribe("raw_gnss", 100, & AckMsckfLam::rawGnssCallback, this);
 
   // save csv
   csv_timer = nh.createTimer(ros::Duration(1),&AckMsckfLam::csv_timer_callBack,this);
 
   return true;
+}
+
+/**
+ * @brief rawGnssCallback 
+ *  
+ */
+void AckMsckfLam::rawGnssCallback(const sensor_msgs::NavSatFix &msg)
+{
+    // raw_gnss fusion
+    if(use_raw_gnss){
+      double time = msg.header.stamp.toSec();
+      gnss_msg_buffer.push_back(make_pair(time,msg));
+    }
+
 }
 
 /**
@@ -764,6 +822,113 @@ void AckMsckfLam::findRedundantCamStates(
 
   // Sort the elements in the output vector.
   sort(rm_cam_state_ids.begin(), rm_cam_state_ids.end());
+
+  return;
+}
+
+/**
+ * @brief measurementUpdate_gnss 
+ *  
+ */
+void AckMsckfLam::measurementUpdate_gnss(
+    const MatrixXd& H, const VectorXd& r,const Eigen::MatrixXd &noise) {
+
+  if (H.rows() == 0 || r.rows() == 0) return;
+
+  MatrixXd H_thin;
+  VectorXd r_thin;
+
+  if (H.rows() > H.cols()) {
+    // Convert H to a sparse matrix.
+    SparseMatrix<double> H_sparse = H.sparseView();
+
+    // Perform QR decompostion on H_sparse.
+    SPQR<SparseMatrix<double> > spqr_helper;
+    spqr_helper.setSPQROrdering(SPQR_ORDERING_NATURAL);
+    spqr_helper.compute(H_sparse);
+
+    MatrixXd H_temp;
+    VectorXd r_temp;
+    (spqr_helper.matrixQ().transpose() * H).evalTo(H_temp);
+    (spqr_helper.matrixQ().transpose() * r).evalTo(r_temp);
+
+    H_thin = H_temp.topRows(21+state_server.cam_states.size()*6);
+    r_thin = r_temp.head(21+state_server.cam_states.size()*6);
+
+  } else {
+    H_thin = H;
+    r_thin = r;
+  }
+
+  // Compute the Kalman gain.
+  // K = P * H_thin^T * (H_thin*P*H_thin^T + Rn)^-1
+  // K * (H_thin*P*H_thin^T + Rn) = P * H_thin^T
+  // -> (H_thin*P*H_thin^T + Rn)^T * K^T = H_thin * P^T
+  const MatrixXd& P = state_server.state_cov;
+  MatrixXd S = H_thin*P*H_thin.transpose() + noise;
+  MatrixXd K_transpose = S.ldlt().solve(H_thin*P);
+  MatrixXd K = K_transpose.transpose();
+
+  // Compute the error of the state.
+  VectorXd delta_x = K * r_thin;
+
+  // delta_x_imu
+  const VectorXd& delta_x_imu = delta_x.head<21>();
+
+  if (
+      delta_x_imu.segment<3>(6).norm() > 0.5 ||
+      delta_x_imu.segment<3>(3).norm() > 1.0) {
+      printf("delta velocity: %f\n", delta_x_imu.segment<3>(6).norm());
+      printf("delta position: %f\n", delta_x_imu.segment<3>(3).norm());
+      ROS_WARN("Update change is too large.");
+  }
+
+  // update imu_state
+  const Vector4d dq_imu =
+    smallAngleQuaternion(delta_x_imu.head<3>());
+  state_server.imu_state.orientation = quaternionMultiplication(
+      dq_imu, state_server.imu_state.orientation);
+  state_server.imu_state.position += delta_x_imu.segment<3>(3);
+  state_server.imu_state.velocity += delta_x_imu.segment<3>(6);
+  state_server.imu_state.gyro_bias += delta_x_imu.segment<3>(15);
+  state_server.imu_state.acc_bias += delta_x_imu.segment<3>(18);
+  
+  // update extrinsic
+  const Vector4d dq_extrinsic =
+    smallAngleQuaternion(delta_x_imu.segment<3>(9));
+  state_server.imu_state.R_imu_body = quaternionToRotation(
+      dq_extrinsic) * state_server.imu_state.R_imu_body;
+  state_server.imu_state.t_body_imu += delta_x_imu.segment<3>(12);
+  
+  state_server.imu_state.T_body_imu.linear() = state_server.imu_state.R_imu_body.inverse();
+  state_server.imu_state.T_body_imu.translation() = state_server.imu_state.t_body_imu;
+  state_server.imu_state.T_imu_body = state_server.imu_state.T_body_imu.inverse();
+  state_server.imu_state.t_imu_body = state_server.imu_state.T_imu_body.translation();
+  // cam
+  state_server.ack_state.T_body_cam0 = state_server.imu_state.T_imu_cam0 * state_server.imu_state.T_body_imu;
+  state_server.ack_state.R_body_cam0 = state_server.ack_state.T_body_cam0.linear();
+  state_server.ack_state.t_body_cam0 = state_server.ack_state.T_body_cam0.translation();
+  state_server.ack_state.t_cam0_body = state_server.ack_state.T_body_cam0.inverse().translation();
+
+  // Update the camera states.
+  auto cam_state_iter = state_server.cam_states.begin();
+  for (int i = 0; i < state_server.cam_states.size();
+      ++i, ++cam_state_iter) {
+    const VectorXd& delta_x_cam = delta_x.segment<6>(21+i*6);
+    const Vector4d dq_cam = smallAngleQuaternion(delta_x_cam.head<3>());
+    cam_state_iter->second.orientation = quaternionMultiplication(
+        dq_cam, cam_state_iter->second.orientation);
+    cam_state_iter->second.position += delta_x_cam.tail<3>();
+  }
+
+  // Update state covariance.
+  MatrixXd I_KH = MatrixXd::Identity(K.rows(), H_thin.cols()) - K*H_thin;
+  state_server.state_cov = I_KH*state_server.state_cov;
+
+  // Fix the covariance to be symmetric
+  MatrixXd state_cov_fixed = (state_server.state_cov +
+      state_server.state_cov.transpose()) / 2.0;
+  state_server.state_cov = state_cov_fixed;
 
   return;
 }
@@ -2146,6 +2311,11 @@ void AckMsckfLam::featureCallback(
   // update Ackermann measurement
   ackUpdate(msg);
 
+  // raw_gnss fusion
+  if(is_gnss_aligned){
+    gnssUpdate(msg);
+  }
+
   // Reset the system if necessary.
   onlineReset();
 
@@ -2162,6 +2332,15 @@ void AckMsckfLam::featureCallback(
         prune_cam_states_time, prune_cam_states_time/processing_time);
   }
   
+  // raw_gnss fusion
+  if(use_raw_gnss){
+    if(!is_gnss_aligned)
+      {
+          vio_position_buffer.push_back(make_pair(state_server.imu_state.time, state_server.imu_state.position));
+          rawGnssAlign();
+      }
+  }
+
   CSVDATA_TIME csvdata_time;
   csvdata_time.time = msg->header.stamp.toSec();
   csvdata_time.Dtime = Dtime;
@@ -2172,6 +2351,175 @@ void AckMsckfLam::featureCallback(
   csvData_time.push_back(csvdata_time);
 
   return;
+}
+
+/**
+ * @brief rawGnssAlign 
+ *  
+ */ 
+void AckMsckfLam::rawGnssAlign()
+{ 
+    ROS_INFO("TRY RAW GNSS ALIGN!");
+    if(gnss_msg_buffer.size()==0 || vio_position_buffer.size()==0 || is_gnss_aligned==true) return ;
+    if(gnss_msg_buffer.back().first - last_check_gnss_time < 1.0) return ;
+    last_check_gnss_time = gnss_msg_buffer.back().first;
+    ROS_INFO("%f",gnss_msg_buffer.back().first - gnss_msg_buffer.front().first);
+    if(gnss_msg_buffer.back().first - gnss_msg_buffer.front().first < 5) return;
+
+    while(gnss_msg_buffer.front().first < last_check_gnss_time - 15) gnss_msg_buffer.erase(gnss_msg_buffer.begin());
+    while(vio_position_buffer.front().first < last_check_gnss_time - 15) vio_position_buffer.erase(vio_position_buffer.begin());
+
+    // construct GPS/vio trajectories to do ICP
+    vector<pair<double,Vector3d>> gnss_pos_buffer(gnss_msg_buffer.size());
+    vector<pair<double,Vector3d>> vio_pos_buffer(vio_position_buffer.size());
+
+    int i=0;
+    for(auto ite = gnss_msg_buffer.begin() ; ite!=gnss_msg_buffer.end();ite++, i++)
+    {
+        auto & gnss_msg= ite->second;
+
+        string UTMZone;
+        double north_y;
+        double east_x;
+        // LLtoUTM
+        // NE. -> EN.
+        NavsatConversions::LLtoUTM(gnss_msg.latitude * 180 / M_PI, gnss_msg.longitude * 180 / M_PI,
+                                north_y , east_x,
+                                UTMZone);
+        // ENU
+        gnss_pos_buffer[i]=make_pair(ite->first,
+                                    Vector3d(east_x, north_y, gnss_msg.altitude));
+
+    }
+    i=0;
+    for(auto ite = vio_position_buffer.begin() ; ite!=vio_position_buffer.end();ite++, i++)
+    {
+        vio_pos_buffer[i]=make_pair(ite->first,ite->second);
+    }
+
+    is_gnss_aligned=registration_4DOF(vio_pos_buffer,gnss_pos_buffer,state_server.gnss_state.R_GB_US,state_server.gnss_state.t_GB_US);
+    if(is_gnss_aligned)
+    {
+        double roll_GB_US, pitch_GB_US, yaw_GB_US;
+        Eigen::Quaterniond q_GB_US;
+        q_GB_US = state_server.gnss_state.R_GB_US;
+        tf::Matrix3x3(tf::Quaternion(q_GB_US.x(),q_GB_US.y(),q_GB_US.z(),q_GB_US.w())).getRPY(roll_GB_US, pitch_GB_US, yaw_GB_US, 1);
+        roll_GB_US = roll_GB_US * 180 / M_PI;
+        pitch_GB_US = pitch_GB_US * 180 / M_PI;
+        yaw_GB_US = yaw_GB_US * 180 / M_PI;
+        std::cout.precision(16); 
+        cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+        ROS_INFO("RANSS ALIGNED SUCCESSFULLY!");
+        std::cout << "R_GB_US : roll = " << roll_GB_US << " deg,　pitch = " << pitch_GB_US << " deg,　yaw = " << yaw_GB_US << " deg" << std::endl;
+        cout << "t_GB_US: " << state_server.gnss_state.t_GB_US.transpose() << endl;
+        cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+    }
+
+}
+
+/**
+ * @brief gnssUpdate 
+ *  
+ */ 
+void AckMsckfLam::gnssUpdate(const CameraMeasurementConstPtr& msg){
+
+        while(gnss_msg_buffer.size()!=0 && gnss_msg_buffer.front().first < msg->header.stamp.toSec()){
+          gnss_msg_buffer.erase(gnss_msg_buffer.begin());
+        }
+        
+        if(gnss_msg_buffer.size()!=0 )
+        {
+
+            auto & gnss_msg =gnss_msg_buffer.front().second;
+
+            string UTMZone;
+            double north_y;
+            double east_x;
+            // LLtoUTM
+            // NE. -> EN.
+            NavsatConversions::LLtoUTM(gnss_msg.latitude * 180 / M_PI, gnss_msg.longitude * 180 / M_PI,
+                                        north_y , east_x,
+                                        UTMZone);
+            if(use_debug){
+              // ENU
+              cout.precision(16);
+              cout << "---------------------------------------------------" << endl;
+              cout << "east_x: " << east_x << endl;
+              cout << "north_y: " << north_y << endl;
+              cout << "up_z: " << gnss_msg.altitude << endl;
+              cout << "state_server.imu_state.position: " << state_server.imu_state.position.transpose() << endl;
+              cout << "---------------------------------------------------" << endl;
+            }
+            
+            // ENU
+            state_server.gnss_state.position = Vector3d(east_x , north_y, gnss_msg.altitude);
+
+            // construct H and r
+            MatrixXd H_x = MatrixXd::Zero(3,21+6*state_server.cam_states.size());
+            VectorXd r = VectorXd::Zero(3);
+
+            //-------------------------------------------------
+            Eigen::Vector3d t_Bk_GB_est = state_server.imu_state.position;
+            Eigen::Matrix3d R_GB_Bk_est = quaternionToRotation(
+                state_server.imu_state.orientation);
+            Eigen::Matrix3d R_i_b = state_server.imu_state.R_imu_body;
+            Eigen::Vector3d t_b_i = state_server.imu_state.t_body_imu;
+            Eigen::Matrix3d R_GB_US = state_server.gnss_state.R_GB_US;
+            Eigen::Vector3d t_GB_US = state_server.gnss_state.t_GB_US;
+            
+            //-------------------------------------------------
+            Eigen::Vector3d t_Sk_Us_est = Vector3d::Zero();
+            t_Sk_Us_est = t_GB_US + R_GB_US * t_Bk_GB_est + R_GB_US * (R_GB_Bk_est.transpose()) * R_i_b * ( t_s_i - t_b_i);
+            r.head<3>(3) = state_server.gnss_state.position - t_Sk_Us_est;
+            cout.precision(16);
+            cout << "-----------------------" << endl;
+            // cout<<"Before state_server.gnss_state.position (m)= "<< state_server.gnss_state.position.transpose() << endl;  
+            // cout<<"Before t_Sk_Us_est (m)= " << t_Sk_Us_est.transpose() << endl;  
+            cout<<"Before gnssUpdate delta_t_Sk_Us_est (m)= "<< r.transpose() << endl;
+            cout << endl;
+
+            // gnssUpdate H11
+            H_x.block<3,3>(0,0) = R_GB_US * (R_GB_Bk_est.transpose()) * skewSymmetric( R_i_b * ( t_b_i - t_s_i) );
+
+            // gnssUpdate H12
+            H_x.block<3,3>(0,3) = R_GB_US;
+
+            // gnssUpdate H14
+            H_x.block<3,3>(0,9) = R_GB_US * (R_GB_Bk_est.transpose()) * skewSymmetric( R_i_b * ( t_s_i - t_b_i) );
+
+            // gnssUpdate H15
+            H_x.block<3,3>(0,12) = - R_GB_US * (R_GB_Bk_est.transpose()) * R_i_b;
+            
+            Matrix3d US_t_cov;
+            // std 10m
+            US_t_cov << pow(10 , 2) ,0,0,
+                        0, pow(10 , 2),0,
+                        0, 0,pow(10 , 2);
+
+            MatrixXd noise = MatrixXd::Identity(3,3);
+            noise = US_t_cov;
+
+            // GNSS error measurementUpdate
+            measurementUpdate_gnss(H_x,r,noise);
+
+            //-------------------------------------------------
+            t_Bk_GB_est = state_server.imu_state.position;
+            R_GB_Bk_est = quaternionToRotation(
+                state_server.imu_state.orientation);
+            R_i_b = state_server.imu_state.R_imu_body;
+            t_b_i = state_server.imu_state.t_body_imu;
+            R_GB_US = state_server.gnss_state.R_GB_US;
+            t_GB_US = state_server.gnss_state.t_GB_US;
+            //-------------------------------------------------
+            t_Sk_Us_est = t_GB_US + R_GB_US * t_Bk_GB_est + R_GB_US * (R_GB_Bk_est.transpose()) * R_i_b * ( t_s_i - t_b_i);
+            r.head<3>(3) = state_server.gnss_state.position - t_Sk_Us_est;
+            cout.precision(16);
+            cout<<"After gnssUpdate delta_t_Sk_Us_est (m)= " << r.transpose() << endl;
+            cout << "-----------------------" << endl;
+            cout << endl;
+
+        }
+ 
 }
 
 /**
