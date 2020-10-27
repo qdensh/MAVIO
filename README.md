@@ -8,6 +8,21 @@ MAVIO (ACK-MSCKF-LM) is a consistent monocular Ackermann visual-inertial odometr
 
    https://github.com/KumarRobotics/msckf_vio
 
+Please cite our work if you use it in your research. Thank you very much.
+
+```
+@article{ma2020consistent,
+  title={Consistent Monocular Ackermann Visual--Inertial Odometry for Intelligent and Connected Vehicle Localization},
+  author={Ma, Fangwu and Shi, Jinzhu and Wu, Liang and Dai, Kai and Zhong, Shouren},
+  journal={Sensors},
+  volume={20},
+  number={20},
+  pages={5757},
+  year={2020},
+  publisher={Multidisciplinary Digital Publishing Institute}
+}
+```
+
 ------
 
 
